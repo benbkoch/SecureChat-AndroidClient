@@ -1,5 +1,6 @@
 package com.skynetchat.skynetchat;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
@@ -38,8 +39,43 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        final ProgressDialog progress = new ProgressDialog(this);
 
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
+
+        //Check if current token is valid, then we can skip login
+        if(prefs.contains("Access-Token")) {
+            Log.d("Login", "Has access token");
+
+
+            progress.setTitle("Login");
+            progress.setMessage("Attempting to log back in...");
+            progress.show();
+
+            Thread checkToken = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Webb webb = Webb.create();
+                    webb.setBaseUri("https://skynetchat.herokuapp.com");
+                    Response<JSONObject> response = webb.get("/auth/validate_token").param("access-token", prefs.getString("Access-Token", "a")).param("client", prefs.getString("Client", "c")).param("uid", prefs.getString("userEmail", "e")).asJsonObject();
+                    Log.d("Validate Token response", response.getStatusCode() + "");
+                    if(response.getStatusCode() == 200) {
+                        //token was valid
+                        SharedPreferences.Editor edit = prefs.edit();
+                        edit.putString("Access-Token", response.getHeaderField("Access-Token"));
+                        edit.putString("Client", response.getHeaderField("Client"));
+                        edit.apply();
+                        Intent intent = new Intent(getApplicationContext(), ConversationsActivity.class);
+                        startActivity(intent);
+                        progress.dismiss();
+                    }
+                    progress.dismiss();
+                }
+            });
+            checkToken.start();
+
+        }
+
 
         data = new JSONObject();
 
@@ -116,48 +152,6 @@ public class LoginActivity extends AppCompatActivity {
                             Log.d("Error!:", e.toString());
                         }
 
-//                        try {
-//                            Log.d("Got here", "1");
-//                            connection = (HttpsURLConnection) new URL("https://skynetchat.herokuapp.com/auth/sign_in").openConnection();
-//                            //connection.setDoOutput(true);
-//                            connection.setRequestMethod("POST");
-//                            connection.setRequestProperty("Contect-Type", "application/json");
-//                            //connection.setRequestProperty("Accept", "application/json");
-//                            connection.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
-//                            connection.setRequestProperty("Accept","*/*");
-//                            data.put("email", emailText.getText());
-//                            data.put("password", passwordText.getText());
-//                            Log.d("Got here", "Got here");
-//                            Writer writer = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream(), "UTF-8"));
-//                            Log.d("Got here", "Got here 2");
-//                            String jsonResponse = "";
-//                            Log.d("Json data", data.toString());
-//                            writer.write(URLEncoder.encode(data.toString()));
-//                            Log.d("Got here", "Got here 3");
-//                            writer.flush();
-//                            writer.close();
-//                            Log.d("Got here", "Got here 4");
-//                            int status = connection.getResponseCode();
-//                            Log.d("status", "" + status);
-//                            InputStream input = connection.getInputStream();
-//                            Log.d("Got here", "Got here 5");
-//                            StringBuffer buffer = new StringBuffer();
-//                            if(input == null)
-//                                return;
-//                            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-//                            String inputLine;
-//                            while((inputLine = reader.readLine()) != null) {
-//                                buffer.append(inputLine + "\n");
-//                            }
-//
-//                            jsonResponse = buffer.toString();
-//                            Log.d("JSon respone", jsonResponse);
-//
-//                        } catch(Exception e) {
-//                            Log.d("Error", e.toString());
-//                        } finally {
-//                            connection.disconnect();
-//                        }
                     }
                 });
 
