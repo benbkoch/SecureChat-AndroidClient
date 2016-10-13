@@ -14,6 +14,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+
 public class MessageActivity extends AppCompatActivity {
 
     SharedPreferences prefs;
@@ -29,9 +35,43 @@ public class MessageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
 
+        final TextView conversationText = (TextView) findViewById(R.id.conversationText);
+
+        FileInputStream fis = null;
+
+        Bundle b = getIntent().getExtras();
+        receiver_email = "error";
+        if(b != null) {
+            receiver_email = b.getString("receiver_email");
+        }
+
+        try {
+
+            fis = getApplicationContext().openFileInput("messages_" + receiver_email);
+            InputStreamReader isr = new InputStreamReader(fis);
+            // READ STRING OF UNKNOWN LENGTH
+            StringBuilder sb = new StringBuilder();
+            char[] inputBuffer = new char[2048];
+            int l;
+            // FILL BUFFER WITH DATA
+            while ((l = isr.read(inputBuffer)) != -1) {
+                sb.append(inputBuffer, 0, l);
+            }
+            // CONVERT BYTES TO STRING
+            String readString = sb.toString();
+            conversationText.setText(readString);
+            fis.close();
+        }
+            catch (Exception e) {
+
+            } finally {
+                if (fis != null) {
+                    fis = null;
+                }
+            }
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
 
-        final TextView conversationText = (TextView) findViewById(R.id.conversationText);
+
         final EditText messageText = (EditText) findViewById(R.id.messageText);
 
         Thread t;
@@ -72,11 +112,6 @@ public class MessageActivity extends AppCompatActivity {
             }
         });
 
-        Bundle b = getIntent().getExtras();
-        receiver_email = "error";
-        if(b != null) {
-            receiver_email = b.getString("receiver_email");
-        }
 
         t = new Thread(new Runnable() {
             @Override
@@ -146,5 +181,22 @@ public class MessageActivity extends AppCompatActivity {
         });
 
         t.start();
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        final TextView conversationText = (TextView) findViewById(R.id.conversationText);
+
+        FileOutputStream outputStream;
+        try {
+            outputStream = openFileOutput("messages_" + receiver_email, getApplicationContext().MODE_PRIVATE);
+            outputStream.write(conversationText.getText().toString().getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

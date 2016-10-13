@@ -47,7 +47,7 @@ public class ConversationsActivity extends ListActivity {
                 b.putString("receiver_email", receiver_email);
                 intent.putExtras(b);
                 startActivity(intent);
-                finish();
+                //finish();
 
             }
         });
