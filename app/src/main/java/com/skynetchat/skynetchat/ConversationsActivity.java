@@ -56,25 +56,24 @@ public class ConversationsActivity extends ListActivity {
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems );
         setListAdapter(adapter);
 
-        accessToken = prefs.getString("Access-Token", "No Token");
-        clientToken = prefs.getString("Client", "No Token");
-
-        Log.d("Token", accessToken);
+        accessToken = prefs.getString("authorization", "No Token");
 
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 Webb webb = Webb.create();
                 webb.setBaseUri("https://skynetchat.herokuapp.com");
-                Response<JSONArray> response = webb.get("/conversations/index").header("Access-Token", accessToken).header("Client", clientToken).header("Token-Type", "Bearer").header("UID", prefs.getString("userEmail", "")).header("Content-Type", "application/json").asJsonArray();
+                Response<JSONArray> response = webb.get("/conversations/index").header("authorization", "Bearer " + accessToken).header("Content-Type", "application/json").asJsonArray();
                 SharedPreferences.Editor edit;
-                edit = prefs.edit();
-
-                if(response.getHeaderField("Access-Token") != null) {
-                    edit.putString("Access-Token", response.getHeaderField("Access-Token"));
-                    edit.putString("Client", response.getHeaderField("Client"));
-                    edit.apply();
-                }
+                if(response.getStatusCode() != 200)
+                    finish();
+//                edit = prefs.edit();
+//
+//                if(response.getHeaderField("Access-Token") != null) {
+//                    edit.putString("Access-Token", response.getHeaderField("Access-Token"));
+//                    edit.putString("Client", response.getHeaderField("Client"));
+//                    edit.commit();
+//                }
                 //edit.commit();
 
                 JSONArray array = response.getBody();
@@ -99,6 +98,13 @@ public class ConversationsActivity extends ListActivity {
         adapter.notifyDataSetChanged();
 
 
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d("Kill", "kill");
+        super.onBackPressed();
+        this.finish();
     }
 
 }

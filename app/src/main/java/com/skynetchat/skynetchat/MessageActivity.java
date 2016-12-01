@@ -35,6 +35,16 @@ public class MessageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
 
+
+
+
+
+    }
+
+    protected void onResume() {
+
+        super.onResume();
+
         final TextView conversationText = (TextView) findViewById(R.id.conversationText);
 
         FileInputStream fis = null;
@@ -62,13 +72,13 @@ public class MessageActivity extends AppCompatActivity {
             conversationText.setText(readString);
             fis.close();
         }
-            catch (Exception e) {
+        catch (Exception e) {
 
-            } finally {
-                if (fis != null) {
-                    fis = null;
-                }
+        } finally {
+            if (fis != null) {
+                fis = null;
             }
+        }
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
 
 
@@ -87,13 +97,14 @@ public class MessageActivity extends AppCompatActivity {
                     public void run() {
                         Webb webb = Webb.create();
                         webb.setBaseUri("https://skynetchat.herokuapp.com");
-                        Response<JSONObject> response = webb.post("/messages/create").header("Access-Token", prefs.getString("Access-Token", "No Token")).header("Client", prefs.getString("Client", "No Token")).header("Token-Type", "Bearer").header("UID", prefs.getString("userEmail", "No email")).param("conversation_id", conversation_id).param("body", messageText.getText()).asJsonObject();
+                        //encrypt here
+                        Response<JSONObject> response = webb.post("/messages/create").header("authorization", "Bearer " + prefs.getString("authorization", "No Token")).param("conversation_id", conversation_id).param("body", messageText.getText()).asJsonObject();
                         edit = prefs.edit();
-                        if(response.getHeaderField("Access-Token") != null) {
-                            edit.putString("Access-Token", response.getHeaderField("Access-Token"));
-                            edit.putString("Client", response.getHeaderField("Client"));
-                            edit.apply();
-                        }
+//                        if(response.getHeaderField("Access-Token") != null) {
+//                            edit.putString("Access-Token", response.getHeaderField("Access-Token"));
+//                            edit.putString("Client", response.getHeaderField("Client"));
+//                            edit.commit();
+//                        }
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -112,8 +123,9 @@ public class MessageActivity extends AppCompatActivity {
             }
         });
 
+        //final TextView conversationText = (TextView) findViewById(R.id.conversationText);
 
-        t = new Thread(new Runnable() {
+        Thread loop = new Thread(new Runnable() {
             @Override
             public void run() {
                 //while(!ready);
@@ -121,14 +133,14 @@ public class MessageActivity extends AppCompatActivity {
                 webb.setBaseUri("https://skynetchat.herokuapp.com");
                 //conversation_id = -1;
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
-                Log.d("Test", prefs.getString("Access-Token", "No Token"));
-                Response<JSONObject> response = webb.post("/conversations/create").header("Access-Token", prefs.getString("Access-Token", "No Token")).header("Client", prefs.getString("Client", "No Token")).header("Token-Type", "Bearer").header("UID", prefs.getString("userEmail", "No email")).param("recipient_email", receiver_email).asJsonObject();
-                if(response.getHeaderField("Access-Token") != null) {
-                    edit = prefs.edit();
-                    edit.putString("Access-Token", response.getHeaderField("Access-Token"));
-                    edit.putString("Client", response.getHeaderField("Client"));
-                    edit.apply();
-                }
+                //Log.d("Test", prefs.getString("Access-Token", "No Token"));
+                Response<JSONObject> response = webb.post("/conversations/create").header("authorization", "Bearer " + prefs.getString("authorization", "No Token")).param("recipient_email", receiver_email).asJsonObject();
+//                if(response.getHeaderField("Access-Token") != null) {
+//                    edit = prefs.edit();
+//                    edit.putString("Access-Token", response.getHeaderField("Access-Token"));
+//                    edit.putString("Client", response.getHeaderField("Client"));
+//                    edit.commit();
+//                }
                 //edit.commit();
                 try {
                     conversation_id = response.getBody().getInt("id");
@@ -138,22 +150,25 @@ public class MessageActivity extends AppCompatActivity {
                 }
 
                 while (true) {
-                    Response<JSONArray> mResponse = webb.get("/messages/index").header("Access-Token", prefs.getString("Access-Token", "No Token")).header("Client", prefs.getString("Client", "No Token")).header("Token-Type", "Bearer").header("UID", prefs.getString("userEmail", "No email")).param("conversation_id", conversation_id).asJsonArray();
+                    Response<JSONArray> mResponse = webb.get("/messages/index").header("authorization", "Bearer " + prefs.getString("authorization", "No Token")).param("conversation_id", conversation_id).asJsonArray();
                     JSONArray array = mResponse.getBody();
-                    if(mResponse.getHeaderField("Access-Token") != null) {
-                        edit = prefs.edit();
-                        edit.putString("Access-Token", mResponse.getHeaderField("Access-Token"));
-                        edit.putString("Client", mResponse.getHeaderField("Client"));
-                        edit.apply();
-                    }
+//                    if(mResponse.getHeaderField("Access-Token") != null) {
+//                        edit = prefs.edit();
+//                        edit.putString("Access-Token", mResponse.getHeaderField("Access-Token"));
+//                        edit.putString("Client", mResponse.getHeaderField("Client"));
+//                        edit.commit();
+//                    }
                     //edit.commit();
                     if(array != null && array.length() >  0) {
                         try {
                             String message = conversationText.getText().toString();
+                            //decrypt here with your private key
                             for (int i = 0; i < array.length(); i++) {
-
-                                JSONObject curr = array.getJSONObject(i);
-                                message += receiver_email + ": " + curr.getString("body") + "\n";
+                                Log.d("Got here", "not zero");
+                                Log.d("Text", array.getString(i));
+                                String curr = array.getString(i);
+                                message += receiver_email + ": " + curr + "\n";
+                                Log.d("Message", message);
                             }
 
                             textArea[0] = message;
@@ -180,7 +195,7 @@ public class MessageActivity extends AppCompatActivity {
             }
         });
 
-        t.start();
+        loop.start();
     }
 
 
@@ -198,5 +213,12 @@ public class MessageActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Log.d("Kill", "kill");
+        super.onBackPressed();
+        this.finish();
     }
 }

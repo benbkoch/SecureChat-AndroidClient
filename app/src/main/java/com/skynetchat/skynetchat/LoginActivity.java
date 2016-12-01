@@ -44,40 +44,40 @@ public class LoginActivity extends AppCompatActivity {
         prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
 
         //Check if current token is valid, then we can skip login
-        if(prefs.contains("Access-Token")) {
-            Log.d("Login", "Has access token");
+//        if(prefs.contains("Access-Token")) {
+//            Log.d("Login", "Has access token");
+//
+//
+//            progress.setTitle("Login");
+//            progress.setMessage("Attempting to log back in...");
+//            progress.show();
+//
+//            Thread checkToken = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    Webb webb = Webb.create();
+//                    webb.setBaseUri("https://skynetchat.herokuapp.com");
+//                    Response<JSONObject> response = webb.get("/auth/validate_token").param("access-token", prefs.getString("Access-Token", "a")).param("client", prefs.getString("Client", "c")).param("uid", prefs.getString("userEmail", "e")).asJsonObject();
+//                    Log.d("Validate Token response", response.getStatusCode() + "");
+//                    if(response.getStatusCode() == 200) {
+//                        //token was valid
+//                        SharedPreferences.Editor edit = prefs.edit();
+//                        edit.putString("Access-Token", response.getHeaderField("Access-Token"));
+//                        edit.putString("Client", response.getHeaderField("Client"));
+//                        edit.commit();
+//                        Intent intent = new Intent(getApplicationContext(), ConversationsActivity.class);
+//                        startActivity(intent);
+//                        progress.dismiss();
+//                    }
+//                    progress.dismiss();
+//                }
+//            });
+//            checkToken.start();
 
 
-            progress.setTitle("Login");
-            progress.setMessage("Attempting to log back in...");
-            progress.show();
-
-            Thread checkToken = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Webb webb = Webb.create();
-                    webb.setBaseUri("https://skynetchat.herokuapp.com");
-                    Response<JSONObject> response = webb.get("/auth/validate_token").param("access-token", prefs.getString("Access-Token", "a")).param("client", prefs.getString("Client", "c")).param("uid", prefs.getString("userEmail", "e")).asJsonObject();
-                    Log.d("Validate Token response", response.getStatusCode() + "");
-                    if(response.getStatusCode() == 200) {
-                        //token was valid
-                        SharedPreferences.Editor edit = prefs.edit();
-                        edit.putString("Access-Token", response.getHeaderField("Access-Token"));
-                        edit.putString("Client", response.getHeaderField("Client"));
-                        edit.apply();
-                        Intent intent = new Intent(getApplicationContext(), ConversationsActivity.class);
-                        startActivity(intent);
-                        progress.dismiss();
-                    }
-                    progress.dismiss();
-                }
-            });
-            checkToken.start();
-
-        }
 
 
-        data = new JSONObject();
+
 
         final Button button = (Button) findViewById(R.id.loginButton);
         final Button registerButton = (Button) findViewById(R.id.registerButton);
@@ -112,7 +112,7 @@ public class LoginActivity extends AppCompatActivity {
                             Webb webb = Webb.create();
                             webb.setBaseUri("https://skynetchat.herokuapp.com");
 
-                            Response<JSONObject> response = webb.post("/auth/sign_in").param("email", emailText.getText().toString().toLowerCase()).param("password", passwordText.getText()).asJsonObject();
+                            Response<JSONObject> response = webb.post("/auth_user").param("email", emailText.getText().toString().toLowerCase()).param("password", passwordText.getText()).asJsonObject();
                             JSONObject apiResult = response.getBody();
 
                             int responseCode = response.getStatusCode();
@@ -128,18 +128,12 @@ public class LoginActivity extends AppCompatActivity {
 
                             }
 
-                            String accessToken = response.getHeaderField("Access-Token");
-                            String clientToken = response.getHeaderField("Client");
-                            Log.d("Token", accessToken);
-                            Log.d("client", clientToken);
+
                             SharedPreferences prefs = prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
                             SharedPreferences.Editor edit = prefs.edit();
                             edit.putString("userEmail", emailText.getText().toString().toLowerCase());
-
-                            if(response.getHeaderField("Access-Token") != null) {
-                                edit.putString("Access-Token", response.getHeaderField("Access-Token"));
-                                edit.putString("Client", response.getHeaderField("Client"));
-                            }
+                            JSONObject j = response.getBody();
+                            edit.putString("authorization", j.getString("auth_token"));
                             edit.apply();
                             //edit.commit();
 

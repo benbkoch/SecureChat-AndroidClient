@@ -33,7 +33,7 @@ public class RegisterActivity extends AppCompatActivity {
                         Webb webb = Webb.create();
                         webb.setBaseUri("https://skynetchat.herokuapp.com");
                         String success = "";
-                        Response<JSONObject> response = webb.post("/auth").param("email", email.getText()).param("password", password.getText()).param("password_confirmation", passConfirm.getText()).asJsonObject();
+                        Response<JSONObject> response = webb.post("/register_user").param("email", email.getText()).param("password", password.getText()).param("password_confirmation", passConfirm.getText()).asJsonObject();
                         int status = response.getStatusCode();
 
 
