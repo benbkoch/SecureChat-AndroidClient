@@ -1,7 +1,10 @@
 package com.skynetchat.skynetchat;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -9,6 +12,15 @@ import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -48,6 +60,10 @@ public class RegisterActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
+                                    //SharedPreferences prefs = getSharedPreferences("Keys", Context.MODE_PRIVATE);
+                                    //SharedPreferences.Editor edit = prefs.edit();
+                                    //edit.putString("password", password.getText().toString());
+
                                     Toast.makeText(getApplicationContext(), "Successfully registered, please check email to confirm your account", Toast.LENGTH_LONG).show();
                                     finish();
 
@@ -63,3 +79,4 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 }
+

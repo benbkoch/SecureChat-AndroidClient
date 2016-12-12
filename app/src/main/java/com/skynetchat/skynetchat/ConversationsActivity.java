@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 
 import org.json.JSONArray;
@@ -27,6 +28,9 @@ public class ConversationsActivity extends ListActivity {
     String clientToken;
     ArrayAdapter<String> adapter;
     ArrayList<String> listItems;
+
+    private Button add_btn;
+    private Button share_btn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +53,24 @@ public class ConversationsActivity extends ListActivity {
                 startActivity(intent);
                 //finish();
 
+            }
+        });
+
+        add_btn = (Button)findViewById(R.id.add_btn);
+        share_btn = (Button)findViewById(R.id.share_btn);
+
+        //user clicks add keys
+        add_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ConversationsActivity.this, ReaderActivity.class));
+            }
+        });
+        //user clicks share key
+        share_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ConversationsActivity.this, GeneratorActivity.class));
             }
         });
 

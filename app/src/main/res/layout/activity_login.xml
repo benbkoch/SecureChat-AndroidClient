@@ -32,7 +32,7 @@
         android:layout_alignLeft="@+id/textView"
         android:layout_alignStart="@+id/textView"
         android:layout_marginTop="81dp"
-        android:id="@+id/emailText"
+        android:id="@+id/keyText"
         android:hint="email" />
 
     <EditText
@@ -43,9 +43,9 @@
         android:id="@+id/passwordText"
         android:hint="password"
         android:layout_marginTop="17dp"
-        android:layout_below="@+id/emailText"
-        android:layout_alignLeft="@+id/emailText"
-        android:layout_alignStart="@+id/emailText" />
+        android:layout_below="@+id/keyText"
+        android:layout_alignLeft="@+id/keyText"
+        android:layout_alignStart="@+id/keyText" />
 
     <Button
         android:text="Login"

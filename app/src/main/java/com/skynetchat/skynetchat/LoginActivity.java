@@ -1,6 +1,7 @@
 package com.skynetchat.skynetchat;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
@@ -9,6 +10,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -17,16 +19,15 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.security.KeyFactory;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import javax.crypto.SecretKey;
 import javax.net.ssl.HttpsURLConnection;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -81,7 +82,7 @@ public class LoginActivity extends AppCompatActivity {
 
         final Button button = (Button) findViewById(R.id.loginButton);
         final Button registerButton = (Button) findViewById(R.id.registerButton);
-        final EditText emailText = (EditText) findViewById(R.id.emailText);
+        final EditText emailText = (EditText) findViewById(R.id.keyText);
         final EditText passwordText = (EditText) findViewById(R.id.passwordText);
 
         Handler mHandler = new Handler(Looper.getMainLooper()) {
@@ -128,6 +129,33 @@ public class LoginActivity extends AppCompatActivity {
 
                             }
 
+                            //check if user key exists
+                            SharedPreferences forKeys = getSharedPreferences("Keys", Context.MODE_PRIVATE);
+                            SharedPreferences.Editor editKeys = forKeys.edit();
+                            if(forKeys.getString("myPrivateKey", "") == "" || !emailText.getText().toString().toLowerCase().equals(forKeys.getString("myMail", "not found"))) {
+                                try {
+                                    KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+                                    generator.initialize(2048);
+                                    KeyPair keyPair = generator.generateKeyPair();
+                                    KeyFactory fact = KeyFactory.getInstance("RSA");
+                                    X509EncodedKeySpec pubspec = fact.getKeySpec(keyPair.getPublic(), X509EncodedKeySpec.class);
+                                    PKCS8EncodedKeySpec privspec = fact.getKeySpec(keyPair.getPrivate(), PKCS8EncodedKeySpec.class);
+                                    //convert keys to string
+                                    String publicKeyEncode = Base64.encodeToString(pubspec.getEncoded(), Base64.DEFAULT);
+
+                                    String privateKeyEncode = Base64.encodeToString(privspec.getEncoded(), Base64.DEFAULT);
+                                    Log.d("private key", privateKeyEncode);
+                                    editKeys.putString("myPublicKey", publicKeyEncode);
+                                    editKeys.putString("myPrivateKey", privateKeyEncode);
+                                    //Toast.makeText(getApplicationContext(), publicKeyEncode, Toast.LENGTH_LONG).show();
+                                } catch (NoSuchAlgorithmException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            //save usermail to file
+                            editKeys.putString("myMail", emailText.getText().toString().toLowerCase());
+
+                            editKeys.apply();
 
                             SharedPreferences prefs = prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext() );
                             SharedPreferences.Editor edit = prefs.edit();
